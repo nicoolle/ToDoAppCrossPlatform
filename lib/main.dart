@@ -1,66 +1,145 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'firebase_options.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  ); /*FirebaseOptions(
+        apiKey: "AIzaSyCnWPBWSc0KjjuFJw0aGHmV8_C_PrDxCG0",
+        authDomain: "todoapp-b0558.firebaseapp.com",
+        projectId: "todoapp-b0558",
+        storageBucket: "todoapp-b0558.appspot.com",
+        messagingSenderId: "267280604190",
+        appId: "1:267280604190:web:e48b74bec319c1c6faa20f",
+        measurementId: "G-N6J71GXRBB"),
+  );*/
+  //FirebaseCrashlytics.instance.crash();
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+      brightness: Brightness.light,
+      primaryColor: Colors.blueGrey,
+      accentColor: Colors.blueGrey,
+    ),
+    home: MyApp(),
+  ));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  String todoTitle = "";
+
+  createTodos() {
+    DocumentReference documentReference =
+        FirebaseFirestore.instance.collection("MyTodos").doc(todoTitle);
+
+    Map<String, String> todos = {"todoTitle": todoTitle};
+    documentReference
+        .set(todos)
+        .whenComplete(() => print("$todoTitle created"));
   }
-}
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-  final String title;
+  editTodos() {
+    DocumentReference documentReference =
+    FirebaseFirestore.instance.collection("MyTodos").doc(todoTitle);
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
+    Map<String, String> todos = {"todoTitle": todoTitle};
+    documentReference
+        .set(todos)
+        .whenComplete(() => print("$todoTitle created"));
+  }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  deleteTodos(item) {
+    DocumentReference documentReference =
+        FirebaseFirestore.instance.collection("MyTodos").doc(item);
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+    documentReference.delete().whenComplete(() => print("$item deleted"));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
+        appBar: AppBar(
+          backgroundColor: Colors.blueGrey,
+          title: Text("To do"),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
+        floatingActionButton: FloatingActionButton(
+          child: new Icon(Icons.add),
+          onPressed: () {
+            showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    title: const Text('Add a task'),
+                    content: TextField(
+                      onChanged: (String value) {
+                        todoTitle = value;
+                      },
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          createTodos();
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Add"),
+                      ),
+                    ],
+                  );
+                });
+          },
+        ),
+        body: StreamBuilder(
+          stream: FirebaseFirestore.instance.collection("MyTodos").snapshots(),
+          builder: (BuildContext context, AsyncSnapshot snapshots) {
+            // final documents = snapshots.data.docs.length;
+            if (snapshots.hasData) {
+              return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: snapshots.data.docs.length,
+                  itemBuilder: (context, index) {
+                    DocumentSnapshot documentSnapshot =
+                        snapshots.data.docs[index];
+                    return Dismissible(
+                        onDismissed: (direction) {
+                          deleteTodos(documentSnapshot["todoTitle"]);
+                        },
+                        key: Key(documentSnapshot["todoTitle"]),
+                        child: Card(
+                          elevation: 4,
+                          margin: EdgeInsets.all(8),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          child: ListTile(
+                            title: Text(documentSnapshot["todoTitle"]),
+                            trailing: IconButton(
+                              icon: Icon(Icons.delete_outlined),
+                              onPressed: () {
+                                deleteTodos(documentSnapshot["todoTitle"]);
+                              },
+                              color: Colors.red,
+                            ),
+                          ),
+                        ));
+                  });
+            }
+            return Container();
+          },
+        ));
   }
 }

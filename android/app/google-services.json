@@ -29,6 +29,13 @@
             {
               "client_id": "267280604190-iilducr889rdt3j7k9uf7u8vj34qdbnj.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "267280604190-rhlenlbna3vgr2d7vqp48vaui1cj8jta.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.todoappcrossplatform"
+              }
             }
           ]
         }
