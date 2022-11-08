@@ -11,15 +11,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
-  ); /*FirebaseOptions(
-        apiKey: "AIzaSyCnWPBWSc0KjjuFJw0aGHmV8_C_PrDxCG0",
-        authDomain: "todoapp-b0558.firebaseapp.com",
-        projectId: "todoapp-b0558",
-        storageBucket: "todoapp-b0558.appspot.com",
-        messagingSenderId: "267280604190",
-        appId: "1:267280604190:web:e48b74bec319c1c6faa20f",
-        measurementId: "G-N6J71GXRBB"),
-  );*/
+  );
   //FirebaseCrashlytics.instance.crash();
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
